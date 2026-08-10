@@ -194,11 +194,13 @@ test_bracket = assert "bracket" do
     (action "foo")
     (\s -> void $ action (s <> "/release"))
     (\s -> action (s <> "/run"))
-  joinFiber fiber <#> eq
+  r <- joinFiber fiber
+  liftEffect $ Console.log ("bracket ref is: " <> String.joinWith "," r)
+  pure (r ==
     [ "foo"
     , "foo/run"
     , "foo/release"
-    ]
+    ])
 
 test_bracket_nested :: Aff Unit
 test_bracket_nested = assert "bracket/nested" do
@@ -747,7 +749,12 @@ main = do
   test_throw
   test_liftEffect
 
-  void $ launchAff do
+  runAff_ (case _ of
+    Left err -> do
+      Console.log "❌ Tests failed!"
+      Console.log (message err)
+      throwException err
+    Right _ -> Console.log "✅ Tests passed successfully!") do
     test_delay
     test_fork
     test_join
@@ -786,6 +793,7 @@ main = do
     test_parallel_stack
     test_regression_return_fork
     test_regression_par_apply_async_canceler
+
     test_regression_bracket_catch_cleanup
     test_regression_kill_sync_async
     test_regression_bracket_kill_mask
