@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -e
+cd "$(dirname "$0")/.."
+
+if [ -d "$HOME/.dotnet" ]; then
+  export PATH="$HOME/.dotnet:$PATH"
+fi
+
+# Remove cache for safety
+rm -rf output .spago .cache ../sharpurs-*/output ../sharpurs-*/.spago ../sharpurs-*/.cache
+
+if [ -f "spago.cs.yaml" ]; then
+    rm -f spago.yaml
+    ln -s spago.cs.yaml spago.yaml
+elif [ -f "spago.fs.yaml" ]; then
+    rm -f spago.yaml
+    ln -s spago.fs.yaml spago.yaml
+fi
+
+echo "=== Building project with spago ==="
+spago build || { echo "Spago build failed"; exit 1; }
+
+echo "=== Generating code with sharpurs ==="
+node ../sharpurs/bin/sharpurs.js --main Test.Main || exit 1
+
+echo "=== Compiling and running .NET test binary ==="
+if [ -f "output/Main/Program.fsproj" ]; then
+    dotnet run -c Release -v q --nologo --project output/Main/Program.fsproj
+elif [ -f "output/Main/Program.csproj" ]; then
+    dotnet run -c Release -v q --nologo --project output/Main/Program.csproj
+else
+    echo "No output/Main/Program.fsproj or Program.csproj found."
+    exit 1
+fi
+echo -e "
+✅ Tests passed successfully!"
