@@ -22,9 +22,9 @@ fi
 # Remove cache for safety
 rm -rf output .spago .cache ../sharpurs-*/output ../sharpurs-*/.spago ../sharpurs-*/.cache
 
-if [ -f "spago.cs.yaml" ]; then
+if [ -f "spago.sharp.yaml" ]; then
     rm -f spago.yaml
-    ln -s spago.cs.yaml spago.yaml
+    ln -s spago.sharp.yaml spago.yaml
 elif [ -f "spago.fs.yaml" ]; then
     rm -f spago.yaml
     ln -s spago.fs.yaml spago.yaml
