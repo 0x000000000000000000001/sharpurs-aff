@@ -34,7 +34,7 @@ echo "=== Building project with spago ==="
 spago build || { echo "Spago build failed"; exit 1; }
 
 echo "=== Generating code with sharpurs ==="
-node ../sharpurs/bin/sharpurs.js --main Test.Main || exit 1
+../sharpurs/bin/sharpurs --main Test.Main || exit 1
 
 echo "=== Compiling and running .NET test binary ==="
 if [ -f "output/Main/Program.fsproj" ]; then
