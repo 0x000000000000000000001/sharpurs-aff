@@ -30,6 +30,7 @@ package:
       - exceptions
       - partial
       - st
+      - strings
       - minibench
       - either
       - foldable-traversable

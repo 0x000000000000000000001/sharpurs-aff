@@ -11,6 +11,7 @@ import Data.Bifunctor (lmap)
 import Data.Either (Either(..), either, isLeft, isRight)
 import Data.Foldable (sum)
 import Data.Maybe (Maybe(..))
+import Data.String as String
 import Data.Time.Duration (Milliseconds(..))
 import Data.Traversable (traverse)
 import Effect (Effect)
