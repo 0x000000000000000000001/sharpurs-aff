@@ -35,10 +35,14 @@ type NativeFiber(aff: AffFn) =
                         Sharpurs_Prelude.SharpursRuntime.EventLoopDone()
                     ),
                     (fun ex -> 
+                        if System.Environment.GetEnvironmentVariable("SHARPURS_AFF_DEBUG") = "1" then
+                            System.Console.Error.WriteLine("Unhandled Aff error: " + ex.ToString())
                         tcs.TrySetResult(Error (_unwrapException ex)) |> ignore
                         Sharpurs_Prelude.SharpursRuntime.EventLoopDone()
                     ),
                     (fun ex -> 
+                        if System.Environment.GetEnvironmentVariable("SHARPURS_AFF_DEBUG") = "1" then
+                            System.Console.Error.WriteLine("Unhandled Aff cancellation: " + ex.ToString())
                         tcs.TrySetResult(Error (new Exception("Cancelled", _unwrapException ex))) |> ignore
                         Sharpurs_Prelude.SharpursRuntime.EventLoopDone()
                     ),
@@ -50,8 +54,17 @@ type NativeFiber(aff: AffFn) =
     member this.IsSuspended = not started
 
 let _applyFn (func: obj) (arg: obj) : obj =
-    let method = func.GetType().GetMethods() |> Array.find (fun m -> m.Name = "Invoke" && m.GetParameters().Length = 1)
-    method.Invoke(func, [| arg |])
+    match func with
+    | :? (obj -> obj) as invoke -> invoke arg
+    | _ ->
+        let methods = func.GetType().GetMethods() |> Array.filter (fun m -> m.Name = "Invoke")
+        match methods |> Array.tryFind (fun m -> m.GetParameters().Length = 1) with
+        | Some method -> method.Invoke(func, [| arg |])
+        | None ->
+            let arities = methods |> Array.map (fun m -> string (m.GetParameters().Length)) |> String.concat ","
+            let details = sprintf "_applyFn: cannot apply a value of type %s (Invoke arities: %s)\n%s" (func.GetType().FullName) arities (System.Diagnostics.StackTrace(true).ToString())
+            System.Console.Error.WriteLine(details)
+            failwith details
 
 let _pure = fun (a: obj) -> 
     box (fun (ctx: AffState) -> async.Return(a))
