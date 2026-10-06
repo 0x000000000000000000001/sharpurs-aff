@@ -14,3 +14,7 @@ node_modules
 package-lock.json
 *.lock
 .psc-ide-port
+
+# Local scratch experiments
+/scratch*.fsx
+/scratch.purs
